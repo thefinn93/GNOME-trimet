@@ -1,0 +1,14 @@
+At the moment this is just a GNOME panel applet that says "I love Trimet".
+Future plans include making it display a countdown for a Trimet stop of your
+choice and possibly (probably) an GNOME Shell extension.
+
+
+INSTALL:
+Run install.sh as root. I haven't actually tired this.
+
+REQUIRES:
+
+python 2.7
+python-gnomepanel
+pygtk
+

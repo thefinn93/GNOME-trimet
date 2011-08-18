@@ -1,20 +1,40 @@
 #!/usr/bin/env python
 
+stopid="10872"
+apikey="TROLOLOLOL"
 import pygtk
 import sys
 pygtk.require('2.0')
-
 import gnomeapplet
 import gtk
+import urllib2
+from xml.dom.minidom import parseString
+import time
+
+class TransitTracker(gnomeapplet.Applet):
+    def cleanup(self,event):
+        del self.applet 
+
+    def updateCountdown(self,event):
+        xml = parseString(urllib2.urlopen("http://developer.trimet.org/ws/V1/arrivals?locIDs=" + stopid + "&appID=" + apikey).read())
+        eta = time.gmtime((int(xml.getElementsByTagName("arrival")[0].getAttribute("estimated"))/1000)-time.time())
+        self.button.set_label(str(time.strftime("%H:%M:%S",eta)))
+        self.applet.show_all()
+        return 1
+
+    def __init__(self,applet,iid):
+        self.applet = applet
+        self.button = gtk.Button()
+        self.button.set_relief(gtk.RELIEF_NONE)
+#       self.button.connect("button_press_event", showMenu, applet)
+        self.applet.add(self.button)
+        self.applet.show_all()
+        self.updateCountdown(1)
+        gtk.timeout_add(10000, self.updateCountdown, self)
+
 
 def factory(applet, iid):
-	button = gtk.Button()
-	button.set_relief(gtk.RELIEF_NONE)
-	button.set_label("I love Trimet")
-	button.connect("button_press_event", showMenu, applet)
-	applet.add(button)
-	applet.show_all()
-	return True
+    TransitTracker(applet,iid)
 
 def showMenu(widget, event, applet):
 	if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
@@ -33,9 +53,9 @@ def showAboutDialog(*arguments, **keywords):
 	pass
 
 if len(sys.argv) == 2:
-	if sys.argv[1] == "run-in-window":
+	if sys.argv[1] == "-w":
 		mainWindow = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		mainWindow.set_title("Ubuntu System Panel")
+		mainWindow.set_title("Trimet Countdown")
 		mainWindow.connect("destroy", gtk.main_quit)
 		applet = gnomeapplet.Applet()
 		factory(applet, None)

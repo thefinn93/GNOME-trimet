@@ -1,5 +1,5 @@
 <oaf_info>
-    <oaf_server ubuntu-gettext-domain="gnome-applets-2.0" iid="OAFIID:GNOME_TrimetArrivals_Factory" type="exe" location="trimet.py">
+    <oaf_server ubuntu-gettext-domain="gnome-applets-2.0" iid="OAFIID:GNOME_TrimetArrivals_Factory" type="exe" location="/usr/bin/trimet.py">
         <oaf_attribute name="repo_ids" type="stringv">
             <item value="IDL:Bonobo/GenericFactory:1.0"/>
             <item value="IDL:Bonobo/Unknown:1.0"/>
@@ -17,6 +17,6 @@
         <oaf_attribute name="name" type="string" value="Trimet Arrivals"/>
         <oaf_attribute name="description" type="string" value="Monitor Trimet Bus and MAX arrivals"/>
         <oaf_attribute name="panel:category" type="string" value="Utility"/>
-        <oaf_attribute name="panel:icon" type="string" value="/home/finn/projects/gnomeApplets/trimet/trimet.png"/>
+        <oaf_attribute name="panel:icon" type="string" value="trimet"/>
     </oaf_server>
 </oaf_info>
