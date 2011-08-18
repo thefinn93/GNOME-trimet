@@ -7,8 +7,22 @@ INSTALL:
 Run install.sh as root. I haven't actually tired this.
 
 REQUIRES:
-
 python 2.7
 python-gnomepanel
 pygtk
 
+
+TODO (sort of in order of priority):
+-Account for stops where no ETA is available and display the scheduled time
+-Make a preferences dialog that allows you to set the update interval and stopID
+-Update the timer every time the button is clicked
+-Make the countdown deincriment every second, even though the update is every
+	10 seconds.
+-An about dialog
+-Package it into a nice .deb and upload it to a PPA.
+-Allow the text to change color (ie go red) when the bus neared, as per the
+	user's preference. This could also include recurring or one time alarms
+	when it got below a certain number. ie. Display a notification when the
+	bus is coming in 10 minutes, or schedule a notification so that every
+	when the bus that is suppose to come at 5:30 is 10 minutes away display
+	a notification. This could probably be extended even further.

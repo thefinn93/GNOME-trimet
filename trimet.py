@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-stopid="10872"
-apikey="TROLOLOLOL"
+stopid="7500"
+apikey=""
 import pygtk
 import sys
 pygtk.require('2.0')
@@ -12,17 +12,25 @@ from xml.dom.minidom import parseString
 import time
 
 class TransitTracker(gnomeapplet.Applet):
+
     def cleanup(self,event):
         del self.applet 
 
     def updateCountdown(self,event):
-        xml = parseString(urllib2.urlopen("http://developer.trimet.org/ws/V1/arrivals?locIDs=" + stopid + "&appID=" + apikey).read())
-        eta = time.gmtime((int(xml.getElementsByTagName("arrival")[0].getAttribute("estimated"))/1000)-time.time())
+        if self.i >= self.updateinterval:
+            xml = parseString(urllib2.urlopen("http://developer.trimet.org/ws/V1/arrivals?locIDs=" + stopid + "&appID=" + apikey).read())
+            self.arrivaltime = int(xml.getElementsByTagName("arrival")[0].getAttribute("estimated"))/1000
+            self.i = 0
+        else:
+            self.i = self.i+1
+        eta = time.gmtime(self.arrivaltime-time.time())
         self.button.set_label(str(time.strftime("%H:%M:%S",eta)))
         self.applet.show_all()
         return 1
 
     def __init__(self,applet,iid):
+        self.updateinterval = 10
+        self.i = 10
         self.applet = applet
         self.button = gtk.Button()
         self.button.set_relief(gtk.RELIEF_NONE)
@@ -30,7 +38,7 @@ class TransitTracker(gnomeapplet.Applet):
         self.applet.add(self.button)
         self.applet.show_all()
         self.updateCountdown(1)
-        gtk.timeout_add(10000, self.updateCountdown, self)
+        gtk.timeout_add(1000, self.updateCountdown, self)
 
 
 def factory(applet, iid):
@@ -45,6 +53,7 @@ def create_menu(applet):
 	propxml="""
 			<popup name="button3">
 			<menuitem name="Item 3" verb="About" label="_About" pixtype="stock" pixname="gtk-about"/>
+			<menuitem name="Item 3" verb="Preferences" label="_Preferences" />
 			</popup>"""
 	verbs = [("About", showAboutDialog)]
 	applet.setup_menu(propxml, verbs, None)
