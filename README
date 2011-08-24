@@ -13,6 +13,7 @@ pygtk
 TODO (sort of in order of priority):
 -Allow the user to only watch one bus/MAX line
 -An about dialog
+-Each instance should get seperate preferences, probably with gconf
 -Package it into a nice .deb and upload it to a PPA.
 -Allow the text to change color (ie go red) when the bus neared, as per the
 	user's preference. This could also include recurring or one time alarms
