@@ -8,8 +8,7 @@ import gtk
 import urllib2
 from xml.dom.minidom import parseString
 import time
-import ConfigParser
-import os
+import threading
 import gconf
 
 class TransitTracker(gnomeapplet.Applet):
@@ -19,15 +18,7 @@ class TransitTracker(gnomeapplet.Applet):
 
     def updateCountdown(self,event):
         if self.i >= self.updateinterval:
-            print "checking for updates..."
-            self.arrivaltime = False
-            xml = parseString(urllib2.urlopen("http://developer.trimet.org/ws/V1/arrivals?locIDs=" + self.stopid + "&appID=" + self.apikey).read())
-            print "parsing response..."
-            if len(xml.getElementsByTagName("arrival")) > 0:
-                if xml.getElementsByTagName("arrival")[0].getAttribute("estimated") != "":
-                    self.arrivaltime = int(xml.getElementsByTagName("arrival")[0].getAttribute("estimated"))/1000
-                    self.nextline = xml.getElementsByTagName("arrival")[0].getAttribute("shortSign")
-            self.i = 0
+            self.makeAPIrequest()
         else:
             self.i = self.i+1
         if self.arrivaltime:
@@ -38,15 +29,23 @@ class TransitTracker(gnomeapplet.Applet):
         self.applet.show_all()
         return 1
 
-    def forceUpdate(self):							# Forces the applet to hit the Trimet API
-        self.i = self.updateinterval
+    def makeAPIrequest(self):
+        debug("checking for updates from http://developer.trimet.org/ws/V1/arrivals?locIDs=" + self.stopid + "&appID=" + self.apikey)
+        self.arrivaltime = False
+        xml = parseString(urllib2.urlopen("http://developer.trimet.org/ws/V1/arrivals?locIDs=" + self.stopid + "&appID=" + self.apikey).read())
+        debug("parsing response...")
+        if len(xml.getElementsByTagName("arrival")) > 0:
+            if xml.getElementsByTagName("arrival")[0].getAttribute("estimated") != "":
+                self.arrivaltime = int(xml.getElementsByTagName("arrival")[0].getAttribute("estimated"))/1000
+                self.nextline = xml.getElementsByTagName("arrival")[0].getAttribute("shortSign")
+        self.i = 0
 
     def showMenu(self,widget, event, applet):
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             widget.emit_stop_by_name("button_press_event")
             self.create_menu(applet)
         elif event.type == gtk.gdk.BUTTON_PRESS and event.button == 1:
-            self.forceUpdate()
+            self.makeAPIrequest()
         else:
             self.button.set_label("Button press: " + str(event.button))
             self.applet.show_all()
@@ -117,40 +116,29 @@ class TransitTracker(gnomeapplet.Applet):
         self.apikey = self.prefsAPIkey.get_text()
         self.stopid = self.prefsStopID.get_text()
         self.updateinterval = int(self.prefsupdateinterval.get_text())
-        config = ConfigParser.ConfigParser()
-        config.add_section("trimet")
-        config.set("trimet","stopid",self.stopid)
-        config.set("trimet","apikey",self.apikey)
-        config.set("trimet","interval",self.updateinterval)
-        configfile = open(os.path.expanduser("~/.config/trimetApplet/preferences"),"w")
-        config.write(configfile)
-        configfile.close()
-        forceUpdate()
+        self.config.set_string(self.gconfRootKey + "/stopid",self.stopid)
+        self.config.set_string(self.gconfRootKey + "/apikey",self.apikey)
+        self.config.set_int(self.gconfRootKey + "/interval",self.updateinterval)
+        debug("Prefs written to " + self.gconfRootKey)
+        self.makeAPIrequest()
 
     def readPrefs(self):
-        configPath = os.path.expanduser("~/.config/trimetApplet/preferences")
-        if os.path.exists(configPath):
-            configfile = open(configPath)
-            config = ConfigParser.ConfigParser()
-            config.readfp(configfile)
-            configfile.close()
-            self.stopid = config.get("trimet","stopid")
-            self.apikey = config.get("trimet","apikey")
-            self.updateinterval = config.getint("trimet","interval")
+        self.config = gconf.client_get_default()
+        if self.config.get_bool(self.gconfRootKey + "/setupcomplete"):
+            self.stopid = self.config.get_string(self.gconfRootKey + "/stopid")
+            self.apikey = self.config.get_string(self.gconfRootKey + "/apikey")
+            self.updateinterval = self.config.get_int(self.gconfRootKey + "/interval")
+            debug("Prefs read from " + self.gconfRootKey)
         else:
-            self.stopid="7500"
-            self.apikey="7890FE8AA7CC3A7538F10BDFE"
+            debug(self.gconfRootKey + "/setupcomplete is false or non existant. Writing defaults and displaying preference dialog...")
+            self.stopid = "7500"
+            self.apikey = "7890FE8AA7CC3A7538F10BDFE"
             self.updateinterval = 30
-            if not os.path.isdir(os.path.expanduser("~/.config/trimetApplet/")):
-                os.mkdir(os.path.expanduser("~/.config/trimetApplet"))
-            config = ConfigParser.ConfigParser()
-            config.add_section("trimet")
-            config.set("trimet","stopid",self.stopid)
-            config.set("trimet","apikey",self.apikey)
-            config.set("trimet","interval",self.updateinterval)
-            configfile = open(configPath,"w")
-            config.write(configfile)
-            configfile.close()
+            self.config.set_string(self.gconfRootKey + "/stopid",self.stopid)
+            self.config.set_string(self.gconfRootKey + "/apikey",self.apikey)
+            self.config.set_int(self.gconfRootKey + "/interval",self.updateinterval)
+            self.showPrefs()
+            self.config.set_bool(self.gconfRootKey + "/setupcomplete", True)
 
     def showAboutDialog(self, *arguments, **keywords):
         aboutWindow = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -158,15 +146,19 @@ class TransitTracker(gnomeapplet.Applet):
         aboutWindow.connect("destroy", gtk.main_quit)
         aboutWindow.set_border_width(10)
 
-        aboutText = gtk.Label("The Trimet Arrivals applet\nwas created by Finnian Herzfeld\nof Ubuntu Oregon and is\nmaintained by them.\n\nPlease contact\nfinn@ubuntu-oregon.org\nif you have any questions")
+        aboutText = gtk.Label("The Trimet Arrivals applet\nwas created by Finnian Herzfeld\nof Ubuntu Oregon and is\nmaintained by Ubuntu Oregon.\n\nPlease contact\nfinn@ubuntu-oregon.org\nif you have any questions")
         aboutText.show()
         aboutWindow.add(aboutText)
         aboutWindow.show()
 
     def __init__(self,applet,iid):
+        self.applet = applet
+        self.gconfRootKey = self.applet.get_preferences_key()
+        if self.gconfRootKey == None:
+            self.gconfRootKey = "/apps/panel/applets/TRIMETARRIVALSDBGMODE"
+        debug(self.gconfRootKey)
         self.readPrefs()
         self.i = (self.updateinterval - 1)
-        self.applet = applet
         self.button = gtk.Button()
         self.button.set_label("Checking for updates...")
         self.button.set_relief(gtk.RELIEF_NONE)
@@ -181,8 +173,15 @@ class TransitTracker(gnomeapplet.Applet):
 def factory(applet, iid):
     TransitTracker(applet,iid)
 
+debugmode = False
+
+def debug(msg):
+    if debugmode:
+        print msg
+
 if len(sys.argv) == 2:
 	if sys.argv[1] == "-w":
+                debugmode = True
 		mainWindow = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		mainWindow.set_title("Trimet Countdown")
 		mainWindow.connect("destroy", gtk.main_quit)
@@ -194,5 +193,5 @@ if len(sys.argv) == 2:
 		sys.exit()
 
 if __name__ == '__main__':
-	print "Starting factory"
+	debug("Starting factory")
 	gnomeapplet.bonobo_factory("OAFIID:GNOME_TrimetArrivals_Factory", gnomeapplet.Applet.__gtype__, "Monitor Trimet arrvials", "1.0", factory)
