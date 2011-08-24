@@ -25,12 +25,13 @@ class TransitTracker(gnomeapplet.Applet):
             if len(xml.getElementsByTagName("arrival")) > 0:
                 if xml.getElementsByTagName("arrival")[0].getAttribute("estimated") != "":
                     self.arrivaltime = int(xml.getElementsByTagName("arrival")[0].getAttribute("estimated"))/1000
+                    self.nextline = xml.getElementsByTagName("arrival")[0].getAttribute("shortSign")
             self.i = 0
         else:
             self.i = self.i+1
         if self.arrivaltime:
             eta = time.gmtime(self.arrivaltime-time.time())
-            self.button.set_label(str(time.strftime("%H:%M:%S",eta)))
+            self.button.set_label(self.nextline + ": " + str(time.strftime("%H:%M:%S",eta)))
         else:
             self.button.set_label("No Estimate Available")
         self.applet.show_all()
@@ -159,6 +160,7 @@ class TransitTracker(gnomeapplet.Applet):
         self.applet.add(self.button)
         self.applet.show_all()
         self.arrivaltime = False
+        self.nextline = False
         gtk.timeout_add(1000, self.updateCountdown, self)
 
 

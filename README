@@ -1,13 +1,8 @@
-At the moment this is just a GNOME panel applet that says "I love Trimet".
-Future plans include making it display a countdown for a Trimet stop of your
-choice and possibly (probably) an GNOME Shell extension.
+This applet displays a countdown for arrivals at the Trimet stop of your choice.
 
 
 INSTALL:
 Run install.sh as root.
-
-NOTE: I TESTED THE CURRENT VERSION AT 2:00AM, LONG AFTER THE BUSES AND TRAINS
-STOPPED RUNNING. AS SUCH I CANNOT REALLY SAY IF IT WORKS AT ALL. I THINK IT DOES
 
 REQUIRES:
 python 2.7
@@ -16,6 +11,7 @@ pygtk
 
 
 TODO (sort of in order of priority):
+-Allow the user to only watch one bus/MAX line
 -An about dialog
 -Package it into a nice .deb and upload it to a PPA.
 -Allow the text to change color (ie go red) when the bus neared, as per the
