@@ -17,6 +17,7 @@
         <oaf_attribute name="name" type="string" value="Trimet Arrivals"/>
         <oaf_attribute name="description" type="string" value="Monitor Trimet Bus and MAX arrivals"/>
         <oaf_attribute name="panel:category" type="string" value="Utility"/>
-        <oaf_attribute name="panel:icon" type="string" value="trimet"/>
+        <oaf_attribute name="panel:icon" type="string" value="/usr/share/icons/gnome/48x48/apps/trimet.png"/>
+<!--        <oaf_attribute name="panel:icon" type="string" value="help" /> -->
     </oaf_server>
 </oaf_info>
