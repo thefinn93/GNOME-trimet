@@ -13,11 +13,8 @@ pygtk
 
 
 TODO (sort of in order of priority):
--Account for stops where no ETA is available and display the scheduled time
--Make a preferences dialog that allows you to set the update interval and stopID
+-Save preferences in a file somewhere (maybe ~/.config/trimetApplet/prefs or something)
 -Update the timer every time the button is clicked
--Make the countdown deincriment every second, even though the update is every
-	10 seconds.
 -An about dialog
 -Package it into a nice .deb and upload it to a PPA.
 -Allow the text to change color (ie go red) when the bus neared, as per the
