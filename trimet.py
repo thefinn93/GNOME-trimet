@@ -8,6 +8,8 @@ import gtk
 import urllib2
 from xml.dom.minidom import parseString
 import time
+import ConfigParser
+import os
 
 class TransitTracker(gnomeapplet.Applet):
 
@@ -16,8 +18,10 @@ class TransitTracker(gnomeapplet.Applet):
 
     def updateCountdown(self,event):
         if self.i >= self.updateinterval:
+            print "checking for updates..."
             self.arrivaltime = False
             xml = parseString(urllib2.urlopen("http://developer.trimet.org/ws/V1/arrivals?locIDs=" + self.stopid + "&appID=" + self.apikey).read())
+            print "parsing response..."
             if len(xml.getElementsByTagName("arrival")) > 0:
                 if xml.getElementsByTagName("arrival")[0].getAttribute("estimated") != "":
                     self.arrivaltime = int(xml.getElementsByTagName("arrival")[0].getAttribute("estimated"))/1000
@@ -32,11 +36,15 @@ class TransitTracker(gnomeapplet.Applet):
         self.applet.show_all()
         return 1
 
+    def forceUpdate(self):							# Forces the applet to hit the Trimet API
+        self.i = self.updateinterval
 
     def showMenu(self,widget, event, applet):
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             widget.emit_stop_by_name("button_press_event")
             self.create_menu(applet)
+        elif event.type == gtk.gdk.BUTTON_PRESS and event.button == 1:
+            self.forceUpdate()
         else:
             self.button.set_label("Button press: " + str(event.button))
             self.applet.show_all()
@@ -106,20 +114,51 @@ class TransitTracker(gnomeapplet.Applet):
         self.apikey = self.prefsAPIkey.get_text()
         self.stopid = self.prefsStopID.get_text()
         self.updateinterval = int(self.prefsupdateinterval.get_text())
+        config = ConfigParser.ConfigParser()
+        config.add_section("trimet")
+        config.set("trimet","stopid",self.stopid)
+        config.set("trimet","apikey",self.apikey)
+        config.set("trimet","interval",self.updateinterval)
+        configfile = open(os.path.expanduser("~/.config/trimetApplet/preferences"),"w")
+        config.write(configfile)
+        configfile.close()
 
+    def readPrefs(self):
+        configPath = os.path.expanduser("~/.config/trimetApplet/preferences")
+        if os.path.exists(configPath):
+            configfile = open(configPath)
+            config = ConfigParser.ConfigParser()
+            config.readfp(configfile)
+            configfile.close()
+            self.stopid = config.get("trimet","stopid")
+            self.apikey = config.get("trimet","apikey")
+            self.updateinterval = config.getint("trimet","interval")
+        else:
+            self.stopid="7500"
+            self.apikey="7890FE8AA7CC3A7538F10BDFE"
+            self.updateinterval = 30
+            if not os.path.isdir(os.path.expanduser("~/.config/trimetApplet/")):
+                os.mkdir(os.path.expanduser("~/.config/trimetApplet"))
+            config = ConfigParser.ConfigParser()
+            config.add_section("trimet")
+            config.set("trimet","stopid",self.stopid)
+            config.set("trimet","apikey",self.apikey)
+            config.set("trimet","interval",self.updateinterval)
+            configfile = open(configPath,"w")
+            config.write(configfile)
+            configfile.close()
 
     def __init__(self,applet,iid):
-        self.stopid="7500"
-        self.apikey="7890FE8AA7CC3A7538F10BDFE"
-        self.updateinterval = 30						# Interval at which to hit the Trimet API, in seconds
-        self.i = self.updateinterval						# Number of seconds that have passed since last hit
+        self.readPrefs()
+        self.i = (self.updateinterval - 1)
         self.applet = applet
         self.button = gtk.Button()
+        self.button.set_label("Checking for updates...")
         self.button.set_relief(gtk.RELIEF_NONE)
         self.button.connect("button_press_event", self.showMenu, applet)
         self.applet.add(self.button)
         self.applet.show_all()
-        self.updateCountdown(1)
+        self.arrivaltime = False
         gtk.timeout_add(1000, self.updateCountdown, self)
 
 

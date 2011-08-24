@@ -4,7 +4,10 @@ choice and possibly (probably) an GNOME Shell extension.
 
 
 INSTALL:
-Run install.sh as root. I haven't actually tired this.
+Run install.sh as root.
+
+NOTE: I TESTED THE CURRENT VERSION AT 2:00AM, LONG AFTER THE BUSES AND TRAINS
+STOPPED RUNNING. AS SUCH I CANNOT REALLY SAY IF IT WORKS AT ALL. I THINK IT DOES
 
 REQUIRES:
 python 2.7
@@ -13,8 +16,6 @@ pygtk
 
 
 TODO (sort of in order of priority):
--Save preferences in a file somewhere (maybe ~/.config/trimetApplet/prefs or something)
--Update the timer every time the button is clicked
 -An about dialog
 -Package it into a nice .deb and upload it to a PPA.
 -Allow the text to change color (ie go red) when the bus neared, as per the
