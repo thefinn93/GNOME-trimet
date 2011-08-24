@@ -12,7 +12,6 @@ pygtk
 
 TODO (sort of in order of priority):
 -Allow the user to only watch one bus/MAX line
--An about dialog
 -Each instance should get seperate preferences, probably with gconf
 -Package it into a nice .deb and upload it to a PPA.
 -Allow the text to change color (ie go red) when the bus neared, as per the
@@ -21,3 +20,4 @@ TODO (sort of in order of priority):
 	bus is coming in 10 minutes, or schedule a notification so that every
 	when the bus that is suppose to come at 5:30 is 10 minutes away display
 	a notification. This could probably be extended even further.
+-Allow user to search for StopID by address using Trimet's Stop Location method

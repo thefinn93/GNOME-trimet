@@ -10,6 +10,7 @@ from xml.dom.minidom import parseString
 import time
 import ConfigParser
 import os
+import gconf
 
 class TransitTracker(gnomeapplet.Applet):
 
@@ -53,9 +54,10 @@ class TransitTracker(gnomeapplet.Applet):
     def create_menu(self,applet):
         propxml="""
 			<popup name="button3">
-			<menuitem name="Item 3" verb="Preferences" label="_Preferences"/>
+			<menuitem name="prefs" verb="Preferences" label="_Preferences"/>
+			<menuitem name="about" verb="About" label="_About"/>
 			</popup>"""
-        verbs = [("Preferences", self.showPrefs)]
+        verbs = [("Preferences", self.showPrefs),("About",self.showAboutDialog)]
         applet.setup_menu(propxml, verbs, None)
 
     def showPrefs(self,*arguments, **keywords):
@@ -123,6 +125,7 @@ class TransitTracker(gnomeapplet.Applet):
         configfile = open(os.path.expanduser("~/.config/trimetApplet/preferences"),"w")
         config.write(configfile)
         configfile.close()
+        forceUpdate()
 
     def readPrefs(self):
         configPath = os.path.expanduser("~/.config/trimetApplet/preferences")
@@ -148,6 +151,17 @@ class TransitTracker(gnomeapplet.Applet):
             configfile = open(configPath,"w")
             config.write(configfile)
             configfile.close()
+
+    def showAboutDialog(self, *arguments, **keywords):
+        aboutWindow = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        aboutWindow.set_title("About Trimet Arrivals")
+        aboutWindow.connect("destroy", gtk.main_quit)
+        aboutWindow.set_border_width(10)
+
+        aboutText = gtk.Label("The Trimet Arrivals applet\nwas created by Finnian Herzfeld\nof Ubuntu Oregon and is\nmaintained by them.\n\nPlease contact\nfinn@ubuntu-oregon.org\nif you have any questions")
+        aboutText.show()
+        aboutWindow.add(aboutText)
+        aboutWindow.show()
 
     def __init__(self,applet,iid):
         self.readPrefs()
